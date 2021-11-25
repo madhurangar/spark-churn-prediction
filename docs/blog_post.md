@@ -2,11 +2,28 @@
 
 Churn analysis (also called customer attrition rate) is essential for companies to evaluate their customer loss rate. For any organisation, retaining the existing customers, attracting new customers, and minimising the churn is critical to maximising revenue. 
 
-When it comes to streaming services, the most common reasons users cancel their subscriptions are lack of content, limited customer assistance, rival services, etc. In such circumstances, organisations can run a predictive churn analysis using the available behavioural data to accurately identify and execute necessary strategic actions before users leave the platform. 
+## Problem Introduction
 
-In this analysis, we use a large dataset from a music streaming platform provided by Udacity. Analysing large data sets and training machine learning models requires distributed systems to handle extensive memory-intensive processes. Spark is one such tool designed to achieve this.  
+When it comes to streaming services (music or video), the most common reasons users cancel their subscriptions are lack of content, limited customer assistance, rival services, etc. In such circumstances, organisations can run a predictive churn analysis using the available user behavioural data to accurately identify and execute necessary strategic actions to prevent users from leaving the platform. 
 
-## The data set
+## Strategy to solve the problem
+
+In this analysis, we use a large dataset from a music streaming platform provided by Udacity. Analysing large data sets and training machine learning models require distributed systems to handle extensive memory-intensive processes. Spark is one such tool designed to achieve this. Spark has built-in modules capable of pre-processing and modelling big-data using multiple nodes in a small cluster. In this project we use a local Spark installation, thus uses a small subset of the original 12 GB dataset. We test four clustering models to predict the user churn. The workflow of the is as follows,
+
+ 1. Explore, understand dataset and define churn
+ 2. Data pre-processing: Drop empty users and extract features
+ 3. Create machine learning models: Vectorise data and define core routines for classifiers
+ 4. Evaluation, validation and hyperparameter tuning    
+
+## Metrics
+
+The performance of the machine learning model can be measured using a number of performance metrics such as accuracy, precision, recall and f1-score etc. Among all these, f1-score provides a better score combining precision and recall. The f1-score can be interpreted as a harmonic mean of the precision and recall, where an f1-score reaches its best value at 1 and worst score at 0. The relative contribution of precision and recall to the f1-score are equal. The formula for the f1-score is:
+
+$F_{1}=2 \cdot \frac{\text { precision } \cdot \text { recall }}{\text { precision }+\text { recall }}=\frac{\mathrm{TP}}{\mathrm{TP}+\frac{1}{2}(\mathrm{FP}+\mathrm{FN})}$
+
+where TP = number of true positives, FP = number of false positives and FN = number of false negatives. 
+
+## Exploratory data analysis
 
 The provided data set contain:
 
@@ -42,9 +59,9 @@ The calculated user churn data is as follows:
 +------+---------+-----+
 ```
 
-The data set shows that the user churn is higher in males than in females. However, this data is a small subset of the larger dataset. Therefore, it is noteworthy that using the entire dataset (which would be challenging without a distributed system) will significantly improve the statistics/model performance. 
+The data set shows that the user churn is higher in males than in females. However, this dataset is a small subset of the larger dataset. Therefore, it is noteworthy that using the entire dataset (which would be challenging without a distributed system) will significantly improve the statistics/model performance. 
 
-## Feature Engineering
+## Modelling
 
 The original dataset needs to be processed before creating the labelled dataset along with the features vector. The following steps have been performed using PySpark:
 
@@ -87,8 +104,6 @@ Then, these feature set needs to be standardised and converted into a labelled f
 only showing the top 5 rows
 ```
 
-## Modelling
-
 The data set needs to be split into test (20%) and training (20%) data. Then, we can train our models and evaluate the model performance. For this analysis, we use four machine learning models and f1 score as a performance measure.
 
 Classifiers we used:
@@ -97,6 +112,9 @@ Classifiers we used:
  - `LogisticRegression`
  - `RandomForestClassifier`
  - `GBTClassifier`
+
+
+## Results
 
 We have observed the default classifier parameters above 0.9 f1 scores for `DecisionTreeClassifier` and `GBTClassifier`. The resulting f1 scores are as follows;
 
@@ -107,14 +125,39 @@ We have observed the default classifier parameters above 0.9 f1 scores for `Deci
 | `RandomForestClassifier` | 0.78             | 0.63            |
 | `GBTClassifier`          | 0.99             | 0.72            |
 
-Interestingly, even with a minimum number of features and without hyperparameter optimisation, `GBTClassifier` performs very well. According to the test performance, low f1-scores indicate an over-fitting in the model training. Using a stratified sample for the test and training may avoid this, or using the whole 12GB dataset would improve the overall statistics.  
+Interestingly, even with a minimum number of features and without hyperparameter optimisation, `GBTClassifier` performs very well. According to the test performance, low f1-scores indicates an over-fitting in the model training. Using a stratified sample for the test and training may avoid this, or using the whole 12GB dataset would improve the overall statistics.  
 
-## Remarks
- - Overall, `GBTClassifier` and `DecisionTreeClassifier` show excellent performance, even with a small subset of data. 
- - All models tend to over-fit. Therefore, stratified sampling and/or training on a more extensive data set is needed
+## Hyperparameter tuning
+
+Some models performed very well even with the default parameters. However, to improve the model performance hyperparameter tuning is essential; especially for the models which under performed. Spark has the in-built functionality to perform cross validation and parameter grid creation. Using that, we have looked at a range of parameters. Most of the models showed slight or inconsiderable improvements. However, among all the models, `RandomForestClassifier` had the best performance gain from 0.78 to 0.94 f1-score. 
+
+## Justification
+
+Even though some classifiers resulted in a good performance, a better perfomrance can be gained through hyperparameter tuning . In this project, `RandomForestClassifier` showed a good performance gain with proper parameters. However, the process of hyperparameter tuning is time consuming and computationally expensive. 
+
+As a performance metric to evaluate the model and hyperparameter tuning we use f1-score over other performance metrics. The harmonic mean of precision and recall is biased neither to precision nor recall. Thus, it reflects a great balance of both.
+
+## Conclusion
+
+According to the above discussion, the concluding reflections and recommendations for further improvements are as follows. 
+
+### reflections
+
+ - Overall, `GBTClassifier` and `DecisionTreeClassifier` show excellent performance, even with default classifier parameters
+ - The `RandomForestClassifier` model show a considerable performance gain after hyperparameter tuning
+ - All models tend to be over-fitted. Therefore, stratified sampling and/or training on a more extensive data set is needed
  - Hyperparameter tuning takes longer than expected. It requires a considerable computational time
- - Finally, the project was an excellent exercise to handle Spark skillfully
+
+### Improvements
+
+The classification models we tested seems to be over-fitted since the train score is very high and  the test score is comparatively low. This requires further investigation. To avoid over-fitting and to improve the model, one could use the full 12 GB dataset and stratified sampling. Introducing more features would also help to improve the model.  
 
 ## Code availability
 
 All code used in this project can be found here <https://github.com/madhurangar/spark-churn-prediction>
+
+References:
+ [1] https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html
+ [2] https://spark.apache.org/docs/latest/ml-classification-regression.html 
+
+
